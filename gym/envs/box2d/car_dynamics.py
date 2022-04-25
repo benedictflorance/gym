@@ -52,7 +52,7 @@ PLAYFIELD = 2000 / SCALE  # Game over boundary
 
 
 class Car:
-    def __init__(self, world, init_angle, init_x, init_y):
+    def __init__(self, world, init_angle, init_x, init_y, mode = None):
         self.world = world
         self.hull = self.world.CreateDynamicBody(
             position=(init_x, init_y),
@@ -138,6 +138,7 @@ class Car:
             self.wheels.append(w)
         self.drawlist = self.wheels + [self.hull]
         self.particles = []
+        self.mode = mode
 
     def gas(self, gas):
         """control: rear wheel drive
@@ -148,8 +149,12 @@ class Car:
         gas = np.clip(gas, 0, 1)
         for w in self.wheels[2:4]:
             diff = gas - w.gas
-            if diff > 0.1:
-                diff = 0.1  # gradually increase, but stop immediately
+            if self.mode == 'high_accel':
+                if diff > 0.25:
+                    diff = 0.25
+            else: 
+                if diff > 0.1:
+                    diff = 0.1  # gradually increase, but stop immediately
             w.gas += diff
 
     def brake(self, b):
@@ -157,8 +162,13 @@ class Car:
 
         Args:
             b (0..1): Degree to which the brakes are applied. More than 0.9 blocks the wheels to zero rotation"""
+        # print(f'break: {b}')
         for w in self.wheels:
+            if self.mode == 'slow_braking':
+                if b > 0.6:
+                    b = 0.6
             w.brake = b
+            
 
     def steer(self, s):
         """control: steer
@@ -177,7 +187,10 @@ class Car:
 
             # Position => friction_limit
             grass = True
-            friction_limit = FRICTION_LIMIT * 0.6  # Grass friction if no tile
+            if self.mode == 'high_friction':
+                friction_limit = FRICTION_LIMIT * 0.8
+            else:
+                friction_limit = FRICTION_LIMIT * 0.6  # Grass friction if no tile
             for tile in w.tiles:
                 friction_limit = max(
                     friction_limit, FRICTION_LIMIT * tile.road_friction

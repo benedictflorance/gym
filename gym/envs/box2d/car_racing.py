@@ -24,7 +24,7 @@ SCALE = 6.0  # Track scale
 TRACK_RAD = 900 / SCALE  # Track is heavily morphed circle with this radius
 PLAYFIELD = 2000 / SCALE  # Game over boundary
 FPS = 50  # Frames per second
-ZOOM = 2.7  # Camera zoom
+ZOOM = .7  # Camera zoom
 ZOOM_FOLLOW = True  # Set to False for fixed view (don't use zoom)
 
 
@@ -152,6 +152,7 @@ class CarRacing(gym.Env, EzPickle):
         verbose: bool = True,
         lap_complete_percent: float = 0.95,
         domain_randomize: bool = False,
+        game_mode = None
     ):
         EzPickle.__init__(self)
         self.domain_randomize = domain_randomize
@@ -184,6 +185,7 @@ class CarRacing(gym.Env, EzPickle):
         self.observation_space = spaces.Box(
             low=0, high=255, shape=(STATE_H, STATE_W, 3), dtype=np.uint8
         )
+        self.game_mode = game_mode
 
     def _destroy(self):
         if not self.road:
@@ -425,7 +427,7 @@ class CarRacing(gym.Env, EzPickle):
                     "retry to generate track (normal if there are not many"
                     "instances of this message)"
                 )
-        self.car = Car(self.world, *self.track[0][1:4])
+        self.car = Car(self.world, *self.track[0][1:4], self.game_mode)
 
         if not return_info:
             return self.step(None)[0]
@@ -658,7 +660,10 @@ if __name__ == "__main__":
     import pygame
 
     def register_input():
+        # import ipdb; ipdb.set_trace()
         for event in pygame.event.get():
+            # import ipdb; ipdb.set_trace()
+            print(f'event type = {event.type}')
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     a[0] = -1.0
@@ -682,7 +687,7 @@ if __name__ == "__main__":
                 if event.key == pygame.K_DOWN:
                     a[2] = 0
 
-    env = CarRacing()
+    env = CarRacing(game_mode='high_accel')
     env.render()
 
     isopen = True
