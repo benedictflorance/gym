@@ -24,7 +24,7 @@ SCALE = 6.0  # Track scale
 TRACK_RAD = 900 / SCALE  # Track is heavily morphed circle with this radius
 PLAYFIELD = 2000 / SCALE  # Game over boundary
 FPS = 50  # Frames per second
-ZOOM = .7  # Camera zoom
+ZOOM = 2.7  # Camera zoom
 ZOOM_FOLLOW = True  # Set to False for fixed view (don't use zoom)
 
 
@@ -152,7 +152,8 @@ class CarRacing(gym.Env, EzPickle):
         verbose: bool = True,
         lap_complete_percent: float = 0.95,
         domain_randomize: bool = False,
-        game_mode = None
+        game_mode = None,
+        map_id = None
     ):
         EzPickle.__init__(self)
         self.domain_randomize = domain_randomize
@@ -186,6 +187,7 @@ class CarRacing(gym.Env, EzPickle):
             low=0, high=255, shape=(STATE_H, STATE_W, 3), dtype=np.uint8
         )
         self.game_mode = game_mode
+        self.map_id = map_id
 
     def _destroy(self):
         if not self.road:
@@ -408,7 +410,7 @@ class CarRacing(gym.Env, EzPickle):
         return_info: bool = False,
         options: Optional[dict] = None,
     ):
-        super().reset(seed=seed)
+        super().reset(seed=self.map_id)
         self._destroy()
         self.reward = 0.0
         self.prev_reward = 0.0
@@ -686,8 +688,7 @@ if __name__ == "__main__":
                     a[1] = 0
                 if event.key == pygame.K_DOWN:
                     a[2] = 0
-
-    env = CarRacing(game_mode='high_accel')
+    env = CarRacing(game_mode=None, map_id=None) # game_mode: ['high_accel', 'slow_braking', 'high_friction'], map_id: int
     env.render()
 
     isopen = True
